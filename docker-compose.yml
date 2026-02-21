@@ -22,7 +22,7 @@ services:
     container_name: cave-frontend
     restart: unless-stopped
     ports:
-      - "${PORT:-8080}:80"
+      - "${PORT:-8095}:80"
     networks:
       - cave-net
     depends_on:
