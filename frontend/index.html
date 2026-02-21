@@ -681,7 +681,7 @@
                 </div>
                 <div class="form-group">
                     <label>Millésime</label>
-                    <input type="number" id="f-millesime" placeholder="Ex: 2015" min="1900" max="2024" onchange="fetchWineInfo()">
+                    <input type="text" id="f-millesime" placeholder="Ex: 2015" pattern="[0-9]{4}" inputmode="numeric" maxlength="4" onchange="fetchWineInfo()">
                 </div>
             </div>
 
