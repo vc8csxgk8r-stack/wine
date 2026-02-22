@@ -100,6 +100,17 @@
             color: var(--text-muted);
         }
 
+        .stat-plusvalue {
+            font-size: 0.68rem;
+            letter-spacing: 0.05em;
+            display: block;
+            margin-top: 0.1rem;
+            min-height: 0.9rem;
+        }
+
+        .plusvalue-pos { color: #10b981; }
+        .plusvalue-neg { color: #ef4444; }
+
         .btn-add {
             background: linear-gradient(135deg, var(--bordeaux) 0%, var(--bordeaux-light) 100%);
             color: var(--creme);
@@ -638,7 +649,8 @@
         </div>
         <div class="stat-item">
             <span class="stat-value" id="stat-valeur">—</span>
-            <span class="stat-label">Valeur (€)</span>
+            <span class="stat-label">Valeur marché</span>
+            <span class="stat-plusvalue" id="stat-plusvalue"></span>
         </div>
     </div>
     <button class="btn-add" onclick="openModal()">+ Ajouter un vin</button>
@@ -722,6 +734,7 @@
                         <optgroup label="🇪🇸 Espagne">
                             <option>Rioja</option>
                             <option>Ribera del Duero</option>
+                            <option>Toro</option>
                             <option>Priorat</option>
                         </optgroup>
                         <optgroup label="🇮🇹 Italie">
@@ -822,7 +835,27 @@ async function loadStats() {
         const stats = await res.json();
         document.getElementById('stat-bouteilles').textContent = stats.total_bouteilles;
         document.getElementById('stat-vins').textContent = stats.total_vins;
-        document.getElementById('stat-valeur').textContent = stats.valeur_estimee ? stats.valeur_estimee.toFixed(0) + ' €' : '—';
+
+        // Valeur marché
+        const vm = stats.valeur_marche;
+        document.getElementById('stat-valeur').textContent = vm ? vm.toFixed(0) + ' €' : '—';
+
+        // Plus-value vs prix d'achat
+        const va = stats.valeur_achat;
+        const pvEl = document.getElementById('stat-plusvalue');
+        if (vm && va && va > 0) {
+            const diff = vm - va;
+            const pct = ((diff / va) * 100).toFixed(0);
+            if (diff >= 0) {
+                pvEl.textContent = `+${diff.toFixed(0)} € (+${pct}%)`;
+                pvEl.className = 'stat-plusvalue plusvalue-pos';
+            } else {
+                pvEl.textContent = `${diff.toFixed(0)} € (${pct}%)`;
+                pvEl.className = 'stat-plusvalue plusvalue-neg';
+            }
+        } else {
+            pvEl.textContent = '';
+        }
     } catch(e) {}
 }
 
@@ -883,7 +916,11 @@ function createWineCard(vin) {
         </div>
         <div class="millesime-score">
             <span class="score-stars">${'★'.repeat(Math.round(m.note_millesime / 20))}${'☆'.repeat(5 - Math.round(m.note_millesime / 20))}</span>
-            <span class="score-number">Millésime ${m.note_millesime}/100</span>
+            <span class="score-number">
+                ${m.note_estimee
+                    ? `~${m.note_millesime}/100 <span style="opacity:0.6;font-size:0.65rem">(estimé)</span>`
+                    : `${m.note_millesime}/100`}
+            </span>
         </div>
     ` : '';
 
