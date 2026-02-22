@@ -332,6 +332,22 @@
 
         .wine-prix {
             font-family: 'Playfair Display', serif;
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+        }
+
+        .prix-marche {
+            font-size: 1.05rem;
+            color: var(--or-light);
+        }
+
+        .prix-marche-label {
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--text-muted);
+            font-family: 'Crimson Pro', serif;
         }
 
         .prix-achat {
@@ -339,9 +355,8 @@
             color: var(--text-muted);
         }
 
-        .prix-estime {
-            font-size: 1.1rem;
-            color: var(--or-light);
+        .prix-achat span {
+            color: var(--text-main);
         }
 
         .wine-actions {
@@ -847,7 +862,15 @@ function createWineCard(vin) {
         </div>
     ` : '';
 
-    const prix = vin.prix_achat ? `<span class="prix-estime">${vin.prix_achat} €</span>` : '<span class="prix-achat">Prix non renseigné</span>';
+    const prixMarche = vin.prix_estime
+        ? `<span class="prix-marche-label">Valeur marché estimée</span>
+           <span class="prix-marche">~${vin.prix_estime} €</span>`
+        : `<span class="prix-marche-label">Valeur marché</span>
+           <span class="prix-marche" style="color:var(--text-muted);font-size:.85rem">Non disponible</span>`;
+    const prixAchat = vin.prix_achat
+        ? `<span class="prix-achat">Acheté <span>${vin.prix_achat} €</span></span>`
+        : '';
+    const prix = prixMarche + prixAchat;
 
     return `
         <div class="wine-card">
