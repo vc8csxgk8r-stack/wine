@@ -4,9 +4,12 @@ services:
 
   cave-backend:
     build: ./backend
+    container_name: cave-backend
     restart: unless-stopped
     volumes:
       - cave-data:/data
+    networks:
+      - cave-net
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
       interval: 20s
@@ -16,9 +19,12 @@ services:
 
   cave-frontend:
     build: ./frontend
+    container_name: cave-frontend
     restart: unless-stopped
     ports:
       - "${PORT:-8080}:80"
+    networks:
+      - cave-net
     depends_on:
       cave-backend:
         condition: service_healthy
@@ -26,3 +32,7 @@ services:
 volumes:
   cave-data:
     driver: local
+
+networks:
+  cave-net:
+    driver: bridge
