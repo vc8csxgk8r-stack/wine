@@ -238,6 +238,13 @@ def get_vins():
                 vin.get('type_vin', 'Rouge'),
                 vin['millesime']
             )
+            # Prix marché estimé basé sur note du millésime et âge
+            prix_info = search_wine_price(
+                vin.get('nom', ''),
+                vin['millesime'],
+                vin.get('region', 'Default')
+            )
+            vin['prix_estime'] = prix_info.get('prix_estime')
         result.append(vin)
     conn.close()
     return jsonify(result)
