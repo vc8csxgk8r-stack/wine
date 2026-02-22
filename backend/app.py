@@ -124,6 +124,9 @@ MATURITE_DATA = {
     "Ribera del Duero": {
         "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 22, "declin": 30},
     },
+    "Toro": {
+        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 18, "declin": 25},
+    },
     "Priorat": {
         "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 25, "declin": 35},
     },
@@ -180,14 +183,14 @@ MATURITE_DATA = {
 # Cotes des grands millésimes par région
 MILLESIMES_NOTES = {
     "Bordeaux": {
-        2022: 98, 2021: 88, 2020: 98, 2019: 97, 2018: 96, 2017: 88, 2016: 99,
+        2024: 90, 2023: 94, 2022: 98, 2021: 88, 2020: 98, 2019: 97, 2018: 96, 2017: 88, 2016: 99,
         2015: 97, 2014: 92, 2013: 82, 2012: 88, 2011: 88, 2010: 100, 2009: 99,
         2008: 89, 2007: 85, 2006: 90, 2005: 100, 2004: 89, 2003: 91, 2001: 90,
         2000: 99, 1998: 90, 1996: 93, 1995: 94, 1990: 100, 1989: 97, 1988: 90,
         1986: 89, 1985: 90, 1982: 100
     },
     "Bourgogne": {
-        2022: 96, 2021: 97, 2020: 97, 2019: 98, 2018: 93, 2017: 90, 2016: 94,
+        2024: 91, 2023: 94, 2022: 96, 2021: 97, 2020: 97, 2019: 98, 2018: 93, 2017: 90, 2016: 94,
         2015: 96, 2014: 90, 2013: 87, 2012: 90, 2011: 88, 2010: 96, 2009: 95,
         2008: 90, 2007: 91, 2006: 89, 2005: 99, 2004: 88, 2003: 92, 2002: 94,
         2001: 85, 1999: 94, 1996: 98, 1995: 93, 1993: 90, 1990: 99, 1988: 95
@@ -197,31 +200,31 @@ MILLESIMES_NOTES = {
         2002: 98, 1996: 100, 1995: 96, 1990: 99, 1988: 97, 1985: 96, 1982: 99
     },
     "Rhône": {
-        2022: 98, 2021: 94, 2020: 99, 2019: 99, 2018: 95, 2017: 91, 2016: 93,
+        2024: 92, 2023: 95, 2022: 98, 2021: 94, 2020: 99, 2019: 99, 2018: 95, 2017: 91, 2016: 93,
         2015: 95, 2014: 88, 2013: 90, 2012: 97, 2011: 91, 2010: 99, 2009: 100,
         2007: 98, 2006: 91, 2005: 95, 2004: 88, 2003: 95, 2001: 95, 1999: 94
     },
     "Loire": {
-        2022: 95, 2021: 90, 2020: 94, 2019: 97, 2018: 92, 2017: 88, 2016: 90,
+        2024: 90, 2023: 93, 2022: 95, 2021: 90, 2020: 94, 2019: 97, 2018: 92, 2017: 88, 2016: 90,
         2015: 95, 2014: 90, 2010: 96, 2009: 94, 2005: 95, 2003: 90, 2002: 94,
         1997: 96, 1996: 95, 1990: 98, 1989: 97
     },
     "Alsace": {
-        2021: 94, 2020: 96, 2019: 97, 2018: 96, 2017: 90, 2016: 92, 2015: 96,
+        2024: 92, 2023: 94, 2021: 94, 2020: 96, 2019: 97, 2018: 96, 2017: 90, 2016: 92, 2015: 96,
         2014: 91, 2010: 97, 2008: 96, 2007: 93, 2005: 98, 2001: 97, 2000: 94,
         1998: 98, 1990: 99, 1989: 97
     },
     "Languedoc-Roussillon": {
-        2022: 94, 2021: 90, 2020: 95, 2019: 96, 2018: 93, 2017: 89, 2016: 91,
+        2024: 91, 2023: 93, 2022: 94, 2021: 90, 2020: 95, 2019: 96, 2018: 93, 2017: 89, 2016: 91,
         2015: 94, 2014: 88, 2012: 93, 2010: 94, 2009: 95, 2007: 93, 2005: 95,
         2003: 91, 2001: 90
     },
     "Provence": {
-        2022: 93, 2021: 91, 2020: 94, 2019: 95, 2018: 92, 2017: 89, 2016: 90,
+        2024: 90, 2023: 92, 2022: 93, 2021: 91, 2020: 94, 2019: 95, 2018: 92, 2017: 89, 2016: 90,
         2015: 93, 2013: 90, 2012: 91, 2010: 93, 2009: 94, 2007: 90
     },
     "Sud-Ouest": {
-        2022: 94, 2021: 89, 2020: 95, 2019: 96, 2018: 93, 2016: 92, 2015: 95,
+        2024: 90, 2023: 93, 2022: 94, 2021: 89, 2020: 95, 2019: 96, 2018: 93, 2016: 92, 2015: 95,
         2014: 89, 2010: 95, 2009: 96, 2005: 95, 2003: 92, 2000: 94, 1995: 93
     },
     "Jura": {
@@ -229,50 +232,95 @@ MILLESIMES_NOTES = {
         2009: 95, 2005: 96, 2002: 93
     },
     "Rioja": {
-        2022: 96, 2020: 97, 2019: 98, 2018: 95, 2017: 90, 2016: 96, 2015: 97,
+        2024: 92, 2023: 94, 2022: 96, 2020: 97, 2019: 98, 2018: 95, 2017: 90, 2016: 96, 2015: 97,
         2014: 91, 2012: 93, 2010: 98, 2009: 96, 2005: 97, 2004: 94, 2001: 96,
         1995: 98, 1994: 97, 1991: 96
     },
     "Ribera del Duero": {
-        2022: 95, 2020: 96, 2019: 97, 2018: 94, 2016: 95, 2015: 96, 2012: 94,
+        2024: 91, 2023: 93, 2022: 95, 2020: 96, 2019: 97, 2018: 94, 2016: 95, 2015: 96, 2012: 94,
         2010: 97, 2009: 95, 2005: 96, 2004: 95, 1999: 97, 1994: 98
     },
     "Toscane": {
-        2021: 97, 2020: 96, 2019: 97, 2018: 93, 2016: 98, 2015: 97, 2013: 96,
+        2024: 92, 2023: 94, 2021: 97, 2020: 96, 2019: 97, 2018: 93, 2016: 98, 2015: 97, 2013: 96,
         2012: 93, 2011: 91, 2010: 95, 2009: 93, 2007: 97, 2006: 94, 2004: 96,
         2001: 97, 1999: 97, 1997: 99, 1995: 95, 1990: 99, 1988: 97, 1985: 98
     },
     "Piémont": {
-        2021: 97, 2020: 96, 2019: 99, 2018: 94, 2017: 90, 2016: 100, 2015: 97,
+        2024: 92, 2023: 95, 2021: 97, 2020: 96, 2019: 99, 2018: 94, 2017: 90, 2016: 100, 2015: 97,
         2014: 86, 2013: 95, 2012: 92, 2010: 98, 2008: 95, 2006: 93, 2004: 97,
         2001: 96, 2000: 97, 1999: 95, 1996: 97, 1990: 99, 1989: 98
     },
     "Napa Valley": {
-        2022: 95, 2021: 93, 2019: 97, 2018: 96, 2016: 97, 2015: 95, 2014: 96,
+        2024: 91, 2023: 94, 2022: 95, 2021: 93, 2019: 97, 2018: 96, 2016: 97, 2015: 95, 2014: 96,
         2013: 95, 2012: 97, 2010: 94, 2009: 95, 2007: 96, 2005: 95, 2002: 96,
         2001: 95, 1997: 97, 1994: 98, 1991: 98
     },
     "Mendoza": {
-        2021: 94, 2019: 96, 2018: 95, 2017: 91, 2016: 94, 2015: 95, 2013: 93,
+        2024: 91, 2023: 93, 2021: 94, 2019: 96, 2018: 95, 2017: 91, 2016: 94, 2015: 95, 2013: 93,
         2010: 96, 2009: 95, 2007: 96, 2006: 94
     },
     "Default": {
-        2022: 92, 2021: 90, 2020: 93, 2019: 94, 2018: 91, 2017: 88, 2016: 92,
+        2024: 88, 2023: 91, 2022: 92, 2021: 90, 2020: 93, 2019: 94, 2018: 91, 2017: 88, 2016: 92,
         2015: 94, 2014: 88, 2013: 84, 2012: 88, 2011: 87, 2010: 93, 2009: 94,
         2008: 86, 2007: 87, 2006: 88, 2005: 96, 2004: 86, 2003: 88
     }
 }
 
+def interpoler_note(region_notes, millesime):
+    """Retourne la note exacte si connue, sinon interpole depuis les années voisines."""
+    if millesime in region_notes:
+        return region_notes[millesime], False  # note exacte, pas une estimation
+
+    annees = sorted(region_notes.keys())
+    if not annees:
+        return 88, True
+
+    # Avant la première année connue
+    if millesime < annees[0]:
+        return region_notes[annees[0]], True
+
+    # Après la dernière année connue
+    if millesime > annees[-1]:
+        # Utiliser la moyenne des 3 dernières années connues
+        recentes = annees[-3:]
+        return round(sum(region_notes[a] for a in recentes) / len(recentes)), True
+
+    # Interpolation linéaire entre les deux années encadrantes
+    for i in range(len(annees) - 1):
+        a1, a2 = annees[i], annees[i + 1]
+        if a1 < millesime < a2:
+            n1, n2 = region_notes[a1], region_notes[a2]
+            p = (millesime - a1) / (a2 - a1)
+            return round(n1 + p * (n2 - n1)), True
+
+    return 88, True
+
+
 def get_maturite_info(region, type_vin, millesime):
     age = datetime.now().year - millesime
-    
+
+    # Vin de l'année en cours ou futur
+    if age <= 0:
+        return {
+            "statut": "trop_jeune",
+            "label": "En cours de vinification",
+            "couleur": "#6366f1",
+            "pourcentage": 0,
+            "conseil": "Ce vin est de la dernière vendange. Patience !",
+            "age": age,
+            "note_millesime": 90,
+            "note_estimee": True,
+            "apogee_debut": millesime + 5,
+            "apogee_fin": millesime + 15,
+        }
+
     # Trouver les données de maturité
     region_data = MATURITE_DATA.get(region, MATURITE_DATA["Default"])
     maturite = region_data.get(type_vin, MATURITE_DATA["Default"].get(type_vin, MATURITE_DATA["Default"]["Rouge"]))
-    
-    # Note du millésime
+
+    # Note du millésime — exacte ou interpolée
     region_notes = MILLESIMES_NOTES.get(region, MILLESIMES_NOTES["Default"])
-    note_millesime = region_notes.get(millesime, 88)  # 88 par défaut
+    note_millesime, note_estimee = interpoler_note(region_notes, millesime)
     
     # Calculer le statut de maturité
     if age < maturite["debut"]:
@@ -316,6 +364,7 @@ def get_maturite_info(region, type_vin, millesime):
         "conseil": conseil,
         "age": age,
         "note_millesime": note_millesime,
+        "note_estimee": note_estimee,
         "apogee_debut": millesime + maturite["apogee_debut"],
         "apogee_fin": millesime + maturite["apogee_fin"],
     }
@@ -447,7 +496,20 @@ def get_stats():
     stats = {}
     stats['total_bouteilles'] = conn.execute('SELECT SUM(quantite) FROM vins').fetchone()[0] or 0
     stats['total_vins'] = conn.execute('SELECT COUNT(*) FROM vins').fetchone()[0] or 0
-    stats['valeur_estimee'] = conn.execute('SELECT SUM(prix_achat * quantite) FROM vins').fetchone()[0] or 0
+
+    # Valeur marché = somme des prix estimés × quantité pour chaque vin
+    vins = conn.execute('SELECT region, millesime, quantite FROM vins').fetchall()
+    valeur_marche = 0
+    for v in vins:
+        if v['millesime']:
+            prix_info = search_wine_price('', v['millesime'], v['region'] or 'Default')
+            px = prix_info.get('prix_estime') or 0
+            valeur_marche += px * (v['quantite'] or 1)
+    stats['valeur_marche'] = round(valeur_marche, 2)
+
+    # Valeur achat (conservée pour comparaison)
+    stats['valeur_achat'] = round(conn.execute('SELECT SUM(prix_achat * quantite) FROM vins').fetchone()[0] or 0, 2)
+
     stats['par_type'] = {}
     for row in conn.execute('SELECT type_vin, COUNT(*) as cnt FROM vins GROUP BY type_vin'):
         stats['par_type'][row[0]] = row[1]
