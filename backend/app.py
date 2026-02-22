@@ -11,6 +11,28 @@ CORS(app)
 
 DB_PATH = '/data/cave.db'
 
+# Initialisation DB au démarrage — exécuté par Gunicorn au chargement du module
+os.makedirs('/data', exist_ok=True)
+_conn = sqlite3.connect(DB_PATH)
+_conn.execute('''
+    CREATE TABLE IF NOT EXISTS vins (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nom TEXT NOT NULL,
+        region TEXT,
+        appellation TEXT,
+        cepage TEXT,
+        millesime INTEGER,
+        quantite INTEGER DEFAULT 1,
+        prix_achat REAL,
+        note TEXT,
+        date_ajout TEXT DEFAULT CURRENT_TIMESTAMP,
+        image_url TEXT,
+        type_vin TEXT DEFAULT "Rouge"
+    )
+''')
+_conn.commit()
+_conn.close()
+
 def get_db():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
