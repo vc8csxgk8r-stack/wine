@@ -62,6 +62,7 @@ def init_db():
 
 # Données de maturité par région/appellation (base de connaissance viticole)
 MATURITE_DATA = {
+    # ── France ───────────────────────────────────────────────
     "Bordeaux": {
         "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 25, "declin": 35},
         "Blanc": {"debut": 3, "apogee_debut": 7, "apogee_fin": 15, "declin": 20},
@@ -85,22 +86,94 @@ MATURITE_DATA = {
     },
     "Alsace": {
         "Blanc": {"debut": 3, "apogee_debut": 7, "apogee_fin": 20, "declin": 30},
+        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 5, "declin": 8},
     },
-    "Toscane": {
-        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 25, "declin": 35},
+    "Languedoc-Roussillon": {
+        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 22},
+        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
+        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 4, "declin": 6},
     },
+    "Provence": {
+        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 5, "declin": 8},
+        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 20},
+        "Blanc": {"debut": 2, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
+    },
+    "Sud-Ouest": {
+        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
+        "Blanc": {"debut": 2, "apogee_debut": 5, "apogee_fin": 12, "declin": 18},
+        "Mousseux": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
+    },
+    "Jura": {
+        "Blanc": {"debut": 4, "apogee_debut": 8, "apogee_fin": 25, "declin": 40},
+        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 22},
+    },
+    "Savoie": {
+        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
+        "Rouge": {"debut": 2, "apogee_debut": 5, "apogee_fin": 12, "declin": 18},
+    },
+    "Corse": {
+        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 20},
+        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
+        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 5, "declin": 7},
+    },
+    # ── Espagne ──────────────────────────────────────────────
     "Rioja": {
         "Rouge": {"debut": 5, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
+        "Blanc": {"debut": 2, "apogee_debut": 5, "apogee_fin": 12, "declin": 18},
     },
+    "Ribera del Duero": {
+        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 22, "declin": 30},
+    },
+    "Priorat": {
+        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 25, "declin": 35},
+    },
+    # ── Italie ───────────────────────────────────────────────
+    "Toscane": {
+        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 25, "declin": 35},
+        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
+    },
+    "Piémont": {
+        "Rouge": {"debut": 6, "apogee_debut": 12, "apogee_fin": 30, "declin": 40},
+        "Mousseux": {"debut": 1, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
+    },
+    "Vénétie": {
+        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
+        "Blanc": {"debut": 1, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
+        "Mousseux": {"debut": 1, "apogee_debut": 2, "apogee_fin": 6, "declin": 10},
+    },
+    # ── Nouveau Monde ─────────────────────────────────────────
     "Napa Valley": {
         "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 20, "declin": 30},
         "Blanc": {"debut": 2, "apogee_debut": 5, "apogee_fin": 10, "declin": 15},
+    },
+    "Mendoza": {
+        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 18, "declin": 25},
+        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 8, "declin": 12},
+    },
+    "Barossa Valley": {
+        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
+        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 14},
+    },
+    "Marlborough": {
+        "Blanc": {"debut": 1, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
+        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 4, "declin": 6},
+    },
+    # ── Autres ───────────────────────────────────────────────
+    "Portugal": {
+        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
+        "Blanc": {"debut": 1, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
+        "Mousseux": {"debut": 2, "apogee_debut": 5, "apogee_fin": 15, "declin": 25},
+    },
+    "Allemagne": {
+        "Blanc": {"debut": 3, "apogee_debut": 8, "apogee_fin": 25, "declin": 40},
+        "Mousseux": {"debut": 2, "apogee_debut": 5, "apogee_fin": 15, "declin": 25},
     },
     "Default": {
         "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 20},
         "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
         "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 4, "declin": 6},
         "Mousseux": {"debut": 1, "apogee_debut": 3, "apogee_fin": 10, "declin": 15},
+        "Liquoreux": {"debut": 5, "apogee_debut": 10, "apogee_fin": 30, "declin": 50},
     }
 }
 
@@ -119,10 +192,69 @@ MILLESIMES_NOTES = {
         2008: 90, 2007: 91, 2006: 89, 2005: 99, 2004: 88, 2003: 92, 2002: 94,
         2001: 85, 1999: 94, 1996: 98, 1995: 93, 1993: 90, 1990: 99, 1988: 95
     },
+    "Champagne": {
+        2018: 97, 2015: 98, 2013: 94, 2012: 97, 2008: 99, 2006: 94, 2004: 95,
+        2002: 98, 1996: 100, 1995: 96, 1990: 99, 1988: 97, 1985: 96, 1982: 99
+    },
     "Rhône": {
         2022: 98, 2021: 94, 2020: 99, 2019: 99, 2018: 95, 2017: 91, 2016: 93,
         2015: 95, 2014: 88, 2013: 90, 2012: 97, 2011: 91, 2010: 99, 2009: 100,
         2007: 98, 2006: 91, 2005: 95, 2004: 88, 2003: 95, 2001: 95, 1999: 94
+    },
+    "Loire": {
+        2022: 95, 2021: 90, 2020: 94, 2019: 97, 2018: 92, 2017: 88, 2016: 90,
+        2015: 95, 2014: 90, 2010: 96, 2009: 94, 2005: 95, 2003: 90, 2002: 94,
+        1997: 96, 1996: 95, 1990: 98, 1989: 97
+    },
+    "Alsace": {
+        2021: 94, 2020: 96, 2019: 97, 2018: 96, 2017: 90, 2016: 92, 2015: 96,
+        2014: 91, 2010: 97, 2008: 96, 2007: 93, 2005: 98, 2001: 97, 2000: 94,
+        1998: 98, 1990: 99, 1989: 97
+    },
+    "Languedoc-Roussillon": {
+        2022: 94, 2021: 90, 2020: 95, 2019: 96, 2018: 93, 2017: 89, 2016: 91,
+        2015: 94, 2014: 88, 2012: 93, 2010: 94, 2009: 95, 2007: 93, 2005: 95,
+        2003: 91, 2001: 90
+    },
+    "Provence": {
+        2022: 93, 2021: 91, 2020: 94, 2019: 95, 2018: 92, 2017: 89, 2016: 90,
+        2015: 93, 2013: 90, 2012: 91, 2010: 93, 2009: 94, 2007: 90
+    },
+    "Sud-Ouest": {
+        2022: 94, 2021: 89, 2020: 95, 2019: 96, 2018: 93, 2016: 92, 2015: 95,
+        2014: 89, 2010: 95, 2009: 96, 2005: 95, 2003: 92, 2000: 94, 1995: 93
+    },
+    "Jura": {
+        2021: 95, 2020: 94, 2019: 96, 2018: 93, 2015: 95, 2014: 90, 2010: 94,
+        2009: 95, 2005: 96, 2002: 93
+    },
+    "Rioja": {
+        2022: 96, 2020: 97, 2019: 98, 2018: 95, 2017: 90, 2016: 96, 2015: 97,
+        2014: 91, 2012: 93, 2010: 98, 2009: 96, 2005: 97, 2004: 94, 2001: 96,
+        1995: 98, 1994: 97, 1991: 96
+    },
+    "Ribera del Duero": {
+        2022: 95, 2020: 96, 2019: 97, 2018: 94, 2016: 95, 2015: 96, 2012: 94,
+        2010: 97, 2009: 95, 2005: 96, 2004: 95, 1999: 97, 1994: 98
+    },
+    "Toscane": {
+        2021: 97, 2020: 96, 2019: 97, 2018: 93, 2016: 98, 2015: 97, 2013: 96,
+        2012: 93, 2011: 91, 2010: 95, 2009: 93, 2007: 97, 2006: 94, 2004: 96,
+        2001: 97, 1999: 97, 1997: 99, 1995: 95, 1990: 99, 1988: 97, 1985: 98
+    },
+    "Piémont": {
+        2021: 97, 2020: 96, 2019: 99, 2018: 94, 2017: 90, 2016: 100, 2015: 97,
+        2014: 86, 2013: 95, 2012: 92, 2010: 98, 2008: 95, 2006: 93, 2004: 97,
+        2001: 96, 2000: 97, 1999: 95, 1996: 97, 1990: 99, 1989: 98
+    },
+    "Napa Valley": {
+        2022: 95, 2021: 93, 2019: 97, 2018: 96, 2016: 97, 2015: 95, 2014: 96,
+        2013: 95, 2012: 97, 2010: 94, 2009: 95, 2007: 96, 2005: 95, 2002: 96,
+        2001: 95, 1997: 97, 1994: 98, 1991: 98
+    },
+    "Mendoza": {
+        2021: 94, 2019: 96, 2018: 95, 2017: 91, 2016: 94, 2015: 95, 2013: 93,
+        2010: 96, 2009: 95, 2007: 96, 2006: 94
     },
     "Default": {
         2022: 92, 2021: 90, 2020: 93, 2019: 94, 2018: 91, 2017: 88, 2016: 92,
