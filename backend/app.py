@@ -4,7 +4,13 @@ import sqlite3
 import requests
 import json
 import os
+import re
 from datetime import datetime
+try:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
 
 app = Flask(__name__)
 CORS(app)
@@ -24,12 +30,18 @@ _conn.execute('''
         millesime INTEGER,
         quantite INTEGER DEFAULT 1,
         prix_achat REAL,
+        prix_ref REAL,
         note TEXT,
         date_ajout TEXT DEFAULT CURRENT_TIMESTAMP,
         image_url TEXT,
         type_vin TEXT DEFAULT "Rouge"
     )
 ''')
+# Migration douce : ajouter prix_ref si absente
+try:
+    _conn.execute("ALTER TABLE vins ADD COLUMN prix_ref REAL")
+except Exception:
+    pass
 _conn.commit()
 _conn.close()
 
@@ -51,6 +63,7 @@ def init_db():
             millesime INTEGER,
             quantite INTEGER DEFAULT 1,
             prix_achat REAL,
+            prix_ref REAL,
             note TEXT,
             date_ajout TEXT DEFAULT CURRENT_TIMESTAMP,
             image_url TEXT,
@@ -369,39 +382,137 @@ def get_maturite_info(region, type_vin, millesime):
         "apogee_fin": millesime + maturite["apogee_fin"],
     }
 
-def search_wine_price(nom, millesime, region=""):
-    """Recherche le prix via l'API publique Wine-Searcher ou estimation"""
+# Profil prix par région : (base €, plafond €, bonification_age_max %)
+# base    = prix médian d'un vin courant de la région
+# plafond = prix max atteignable pour un vin exceptionnel
+# age_max = bonification maximale liée au vieillissement (ex: 0.8 = +80% max)
+PRIX_REGION = {
+    # France prestige
+    "Bordeaux":              {"base": 20,  "plafond": 500,  "age_max": 1.5},
+    "Bourgogne":             {"base": 28,  "plafond": 800,  "age_max": 1.5},
+    "Champagne":             {"base": 32,  "plafond": 400,  "age_max": 1.2},
+    "Rhône":                 {"base": 16,  "plafond": 200,  "age_max": 1.0},
+    "Loire":                 {"base": 11,  "plafond": 120,  "age_max": 0.8},
+    "Alsace":                {"base": 11,  "plafond": 100,  "age_max": 0.8},
+    "Jura":                  {"base": 16,  "plafond": 150,  "age_max": 1.0},
+    # France courant
+    "Languedoc-Roussillon":  {"base":  7,  "plafond":  60,  "age_max": 0.3},
+    "Provence":              {"base":  8,  "plafond":  50,  "age_max": 0.2},
+    "Sud-Ouest":             {"base":  9,  "plafond":  80,  "age_max": 0.5},
+    "Savoie":                {"base":  9,  "plafond":  40,  "age_max": 0.2},
+    "Corse":                 {"base":  8,  "plafond":  50,  "age_max": 0.3},
+    # Espagne
+    "Rioja":                 {"base": 10,  "plafond": 120,  "age_max": 0.8},
+    "Ribera del Duero":      {"base": 13,  "plafond": 150,  "age_max": 0.8},
+    "Toro":                  {"base":  9,  "plafond":  60,  "age_max": 0.4},
+    "Priorat":               {"base": 18,  "plafond": 200,  "age_max": 0.8},
+    # Italie
+    "Toscane":               {"base": 18,  "plafond": 300,  "age_max": 1.0},
+    "Piémont":               {"base": 20,  "plafond": 400,  "age_max": 1.2},
+    "Vénétie":               {"base":  7,  "plafond":  80,  "age_max": 0.5},
+    # Nouveau Monde
+    "Napa Valley":           {"base": 28,  "plafond": 400,  "age_max": 0.8},
+    "Mendoza":               {"base":  7,  "plafond":  60,  "age_max": 0.3},
+    "Barossa Valley":        {"base": 11,  "plafond": 100,  "age_max": 0.5},
+    "Marlborough":           {"base":  9,  "plafond":  50,  "age_max": 0.2},
+    # Autres
+    "Portugal":              {"base":  7,  "plafond":  80,  "age_max": 0.5},
+    "Allemagne":             {"base": 12,  "plafond": 150,  "age_max": 0.8},
+    "Default":               {"base": 10,  "plafond":  80,  "age_max": 0.4},
+}
+
+def estimer_prix_local(region, millesime, prix_ref=None):
+    """
+    Estimation du prix de marché.
+    Si prix_ref est fourni (prix saisi par l'utilisateur), on part de lui
+    et on applique uniquement la bonification de vieillissement.
+    Sinon on part du prix de base de la région × qualité du millésime.
+    """
+    profil = PRIX_REGION.get(region, PRIX_REGION["Default"])
+    region_notes = MILLESIMES_NOTES.get(region, MILLESIMES_NOTES["Default"])
+    note, estimee = interpoler_note(region_notes, millesime)
+    age = max(0, datetime.now().year - millesime)
+
+    if prix_ref and prix_ref > 0:
+        # Partir du prix de référence connu, appliquer seulement l'âge
+        bonif_age = min(age * 0.04, profil["age_max"])
+        prix = prix_ref * (1 + bonif_age)
+    else:
+        # Multiplicateur qualité millésime (logarithmique pour éviter les envolées)
+        if note >= 98:   q = 6.0
+        elif note >= 96: q = 4.0
+        elif note >= 94: q = 2.5
+        elif note >= 92: q = 1.8
+        elif note >= 90: q = 1.4
+        elif note >= 88: q = 1.1
+        elif note >= 85: q = 0.95
+        else:            q = 0.85
+
+        # Bonification âge plafonnée selon le potentiel de la région
+        bonif_age = min(age * 0.04, profil["age_max"])
+        prix = profil["base"] * q * (1 + bonif_age)
+
+    # Respecter le plafond région
+    prix = min(prix, profil["plafond"])
+    return round(prix, 2), note, estimee
+
+def estimer_prix_claude(nom, millesime, region, type_vin):
+    """Demande à Claude une estimation de prix réaliste pour ce vin."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key or not ANTHROPIC_AVAILABLE:
+        return None
+
+    cache_key = f"{nom}|{millesime}|{region}"
+    if cache_key in _prix_cache:
+        return _prix_cache[cache_key]
+
     try:
-        # Utiliser l'API Open Drinks / Wine données libres
-        query = f"{nom} {millesime}"
-        url = f"https://api.api-ninjas.com/v1/wine?name={requests.utils.quote(nom)}"
-        # On utilise une estimation basée sur la note du millésime
-        region_notes = MILLESIMES_NOTES.get(region, MILLESIMES_NOTES["Default"])
-        note = region_notes.get(millesime, 88)
-        
-        # Formule d'estimation de prix
-        base_price = 15
-        if note >= 98:
-            multiplier = 20
-        elif note >= 96:
-            multiplier = 10
-        elif note >= 94:
-            multiplier = 5
-        elif note >= 92:
-            multiplier = 3
-        elif note >= 90:
-            multiplier = 2
-        else:
-            multiplier = 1.2
-        
-        age = datetime.now().year - millesime
-        age_multiplier = 1 + (age * 0.05)  # +5% par an de vieillissement
-        
-        prix_estime = round(base_price * multiplier * age_multiplier, 2)
+        client = anthropic.Anthropic(api_key=api_key)
+        prompt = f"""Tu es un expert en vins. Donne une estimation du prix de vente actuel au détail en France (en euros, bouteille 75cl) pour ce vin :
+
+Nom : {nom}
+Millésime : {millesime}
+Région : {region}
+Type : {type_vin}
+
+Réponds UNIQUEMENT avec un objet JSON strictement valide, sans texte autour, sans markdown :
+{{"prix_min": <nombre>, "prix_max": <nombre>, "prix_median": <nombre>, "confiance": "haute|moyenne|faible", "source": "claude"}}
+
+Utilise des prix réalistes du marché français (caves, internet). Si tu ne connais pas ce vin précis, estime en fonction du style et de la région."""
+
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=200,
+            messages=[{"role": "user", "content": prompt}]
+        )
+
+        raw = message.content[0].text.strip()
+        # Extraire le JSON même si Claude ajoute du texte
+        match = re.search(r'\{[^}]+\}', raw)
+        if not match:
+            return None
+        data = json.loads(match.group())
+        result = {
+            "prix_estime": float(data.get("prix_median", 0)),
+            "prix_min": float(data.get("prix_min", 0)),
+            "prix_max": float(data.get("prix_max", 0)),
+            "confiance": data.get("confiance", "faible"),
+            "source": "claude"
+        }
+        _prix_cache[cache_key] = result
+        return result
+    except Exception as e:
+        return None
+
+def search_wine_price(region="", millesime=None, prix_ref=None):
+    """Estimation du prix de marché avec profil région et prix de référence optionnel."""
+    try:
+        prix, note, estimee = estimer_prix_local(region, millesime, prix_ref)
         return {
-            "prix_estime": prix_estime,
+            "prix_estime": prix,
             "source": "estimation",
-            "note_millesime": note
+            "note_millesime": note,
+            "note_estimee": estimee
         }
     except Exception as e:
         return {"prix_estime": None, "source": "erreur", "error": str(e)}
@@ -419,13 +530,17 @@ def get_vins():
                 vin.get('type_vin', 'Rouge'),
                 vin['millesime']
             )
-            # Prix marché estimé basé sur note du millésime et âge
+            # Prix de marché estimé (prix_achat utilisé comme référence si dispo)
+            # prix_ref saisi > prix_achat > formule
+            ref = vin.get('prix_ref') or vin.get('prix_achat')
             prix_info = search_wine_price(
-                vin.get('nom', ''),
-                vin['millesime'],
-                vin.get('region', 'Default')
+                region=vin.get('region', 'Default'),
+                millesime=vin['millesime'],
+                prix_ref=ref
             )
             vin['prix_estime'] = prix_info.get('prix_estime')
+            vin['prix_source'] = prix_info.get('source', 'estimation')
+            vin['note_estimee'] = prix_info.get('note_estimee', False)
         result.append(vin)
     conn.close()
     return jsonify(result)
@@ -435,12 +550,12 @@ def add_vin():
     data = request.json
     conn = get_db()
     conn.execute('''
-        INSERT INTO vins (nom, region, appellation, cepage, millesime, quantite, prix_achat, note, image_url, type_vin)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO vins (nom, region, appellation, cepage, millesime, quantite, prix_achat, prix_ref, note, image_url, type_vin)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         data.get('nom'), data.get('region'), data.get('appellation'),
         data.get('cepage'), data.get('millesime'), data.get('quantite', 1),
-        data.get('prix_achat'), data.get('note'), data.get('image_url'),
+        data.get('prix_achat'), data.get('prix_ref'), data.get('note'), data.get('image_url'),
         data.get('type_vin', 'Rouge')
     ))
     conn.commit()
@@ -461,12 +576,12 @@ def update_vin(id):
     conn = get_db()
     conn.execute('''
         UPDATE vins SET nom=?, region=?, appellation=?, cepage=?, millesime=?,
-        quantite=?, prix_achat=?, note=?, type_vin=?
+        quantite=?, prix_achat=?, prix_ref=?, note=?, type_vin=?
         WHERE id=?
     ''', (
         data.get('nom'), data.get('region'), data.get('appellation'),
         data.get('cepage'), data.get('millesime'), data.get('quantite'),
-        data.get('prix_achat'), data.get('note'), data.get('type_vin'), id
+        data.get('prix_achat'), data.get('prix_ref'), data.get('note'), data.get('type_vin'), id
     ))
     conn.commit()
     conn.close()
@@ -479,7 +594,7 @@ def recherche_vin():
     millesime = data.get('millesime')
     region = data.get('region', 'Default')
     
-    prix_info = search_wine_price(nom, millesime, region)
+    prix_info = search_wine_price(region=region, millesime=millesime)
     
     maturite_info = None
     if millesime:
@@ -502,7 +617,7 @@ def get_stats():
     valeur_marche = 0
     for v in vins:
         if v['millesime']:
-            prix_info = search_wine_price('', v['millesime'], v['region'] or 'Default')
+            prix_info = search_wine_price(region=v['region'] or 'Default', millesime=v['millesime'])
             px = prix_info.get('prix_estime') or 0
             valeur_marche += px * (v['quantite'] or 1)
     stats['valeur_marche'] = round(valeur_marche, 2)
