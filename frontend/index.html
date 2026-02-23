@@ -782,11 +782,11 @@
             <div class="form-row">
                 <div class="form-group">
                     <label>Prix d'achat (€)</label>
-                    <input type="number" id="f-prix" placeholder="0.00" step="0.01" min="0">
+                    <input type="number" id="f-prix" placeholder="0.00" step="0.01" min="0" onchange="fetchWineInfo()">
                 </div>
                 <div class="form-group">
                     <label>Ref. marché (€) <span style="color:var(--or);font-size:.75em">optionnel</span></label>
-                    <input type="number" id="f-prix-ref" placeholder="Ex: 18.00" step="0.01" min="0">
+                    <input type="number" id="f-prix-ref" placeholder="Ex: 18.00" step="0.01" min="0" onchange="fetchWineInfo()">
                 </div>
             </div>
 
@@ -1040,7 +1040,14 @@ async function fetchWineInfo() {
         const res = await fetch('/api/recherche-vin', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ nom, millesime: parseInt(millesime), region, type_vin: type })
+            body: JSON.stringify({
+                nom,
+                millesime: parseInt(millesime),
+                region,
+                type_vin: type,
+                prix_ref:   parseFloat(document.getElementById('f-prix-ref').value) || null,
+                prix_achat: parseFloat(document.getElementById('f-prix').value) || null
+            })
         });
         const data = await res.json();
         
@@ -1048,7 +1055,13 @@ async function fetchWineInfo() {
         box.classList.add('visible');
         
         if (data.prix) {
-            document.getElementById('est-prix').textContent = data.prix.prix_estime ? `${data.prix.prix_estime} €` : '—';
+            const prixEl = document.getElementById('est-prix');
+            const hasPrixRef = parseFloat(document.getElementById('f-prix-ref').value) || parseFloat(document.getElementById('f-prix').value);
+            if (data.prix.prix_estime) {
+                prixEl.textContent = (hasPrixRef ? '' : '~') + data.prix.prix_estime + ' €';
+                prixEl.title = hasPrixRef ? 'Basé sur votre prix de référence' : 'Estimation indicative — saisissez un prix pour affiner';
+                prixEl.style.opacity = hasPrixRef ? '1' : '0.7';
+            } else { prixEl.textContent = '—'; }
             document.getElementById('est-note').textContent = data.prix.note_millesime ? `${data.prix.note_millesime}/100` : '—';
         }
         
