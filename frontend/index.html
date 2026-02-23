@@ -370,6 +370,13 @@
             color: var(--text-main);
         }
 
+        .prix-fourchette {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 0.1rem;
+        }
+
         .wine-actions {
             display: flex;
             gap: 0.5rem;
@@ -772,9 +779,15 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Prix d'achat (€)</label>
-                <input type="number" id="f-prix" placeholder="0.00" step="0.01" min="0">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Prix d'achat (€)</label>
+                    <input type="number" id="f-prix" placeholder="0.00" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Ref. marché (€) <span style="color:var(--or);font-size:.75em">optionnel</span></label>
+                    <input type="number" id="f-prix-ref" placeholder="Ex: 18.00" step="0.01" min="0">
+                </div>
             </div>
 
             <!-- Box info automatique -->
@@ -924,11 +937,19 @@ function createWineCard(vin) {
         </div>
     ` : '';
 
-    const prixMarche = vin.prix_estime
-        ? `<span class="prix-marche-label">Valeur marché estimée</span>
-           <span class="prix-marche">~${vin.prix_estime} €</span>`
-        : `<span class="prix-marche-label">Valeur marché</span>
-           <span class="prix-marche" style="color:var(--text-muted);font-size:.85rem">Non disponible</span>`;
+    let prixMarche;
+    if (vin.prix_estime) {
+        const source = vin.prix_source === 'claude' ? '🤖' : '~';
+        const fourchette = (vin.prix_min && vin.prix_max && vin.prix_source === 'claude')
+            ? `<span class="prix-fourchette">${vin.prix_min}–${vin.prix_max} €</span>`
+            : '';
+        const confiance = vin.confiance === 'haute' ? '' : vin.confiance === 'moyenne' ? ' ·  moyenne' : ' · estimation';
+        prixMarche = `<span class="prix-marche-label">Valeur marché${confiance}</span>
+           <span class="prix-marche">${source}${vin.prix_estime} €</span>${fourchette}`;
+    } else {
+        prixMarche = `<span class="prix-marche-label">Valeur marché</span>
+           <span class="prix-marche" style="color:var(--text-muted);font-size:.85rem">—</span>`;
+    }
     const prixAchat = vin.prix_achat
         ? `<span class="prix-achat">Acheté <span>${vin.prix_achat} €</span></span>`
         : '';
@@ -985,12 +1006,14 @@ function openModal(editData = null) {
         document.getElementById('f-cepage').value = editData.cepage || '';
         document.getElementById('f-quantite').value = editData.quantite || 1;
         document.getElementById('f-prix').value = editData.prix_achat || '';
+        document.getElementById('f-prix-ref').value = editData.prix_ref || '';
         document.getElementById('f-note').value = editData.note || '';
         if (editData.millesime && editData.region) fetchWineInfo();
     } else {
         document.getElementById('wine-form').reset();
         document.getElementById('edit-id').value = '';
         document.getElementById('f-quantite').value = 1;
+        document.getElementById('f-prix-ref').value = '';
         document.getElementById('estimate-box').classList.remove('visible');
     }
     
@@ -1054,6 +1077,7 @@ async function submitForm(e) {
         cepage: document.getElementById('f-cepage').value,
         quantite: parseInt(document.getElementById('f-quantite').value) || 1,
         prix_achat: parseFloat(document.getElementById('f-prix').value) || null,
+        prix_ref: parseFloat(document.getElementById('f-prix-ref').value) || null,
         note: document.getElementById('f-note').value,
     };
 
