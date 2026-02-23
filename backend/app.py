@@ -73,125 +73,450 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Données de maturité par région/appellation (base de connaissance viticole)
+# Données de maturité par région × type × gamme de prix
+# 3 niveaux : bas (<10€), moyen (10-20€), haut (>20€)
+# Chaque profil : debut / apogee_debut / apogee_fin / declin (en années depuis millésime)
+
+def _g(d, ad, af, dc):
+    return {"debut": d, "apogee_debut": ad, "apogee_fin": af, "declin": dc}
+
 MATURITE_DATA = {
-    # ── France ───────────────────────────────────────────────
+    # ═══════════════════════════════════════════════════════
+    # FRANCE
+    # ═══════════════════════════════════════════════════════
+
+    # Bordeaux — Cab.Sauv / Merlot / Cab.Franc
     "Bordeaux": {
-        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 25, "declin": 35},
-        "Blanc": {"debut": 3, "apogee_debut": 7, "apogee_fin": 15, "declin": 20},
+        "Rouge": {
+            "bas":   _g(2,  4,  7, 10),   # Bordeaux AOC, Blaye, entrée gamme
+            "moyen": _g(4,  7, 14, 20),   # Crus bourgeois, Pomerol modeste
+            "haut":  _g(6, 12, 25, 40),   # Grands crus classés
+        },
+        "Blanc": {
+            "bas":   _g(1,  2,  5,  8),
+            "moyen": _g(2,  5, 10, 15),
+            "haut":  _g(3,  7, 15, 22),   # Pessac-Léognan grands blancs
+        },
     },
+
+    # Bourgogne — Pinot Noir / Chardonnay
     "Bourgogne": {
-        "Rouge": {"debut": 5, "apogee_debut": 8, "apogee_fin": 20, "declin": 30},
-        "Blanc": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 25},
+        "Rouge": {
+            "bas":   _g(2,  4,  7, 10),   # Bourgogne AOC, Mâcon rouge
+            "moyen": _g(3,  6, 12, 18),   # Villages, Côte Chalonnaise
+            "haut":  _g(5, 10, 22, 35),   # 1ers crus, Grands crus
+        },
+        "Blanc": {
+            "bas":   _g(1,  2,  5,  8),   # Mâcon, Bourgogne blanc
+            "moyen": _g(2,  5, 10, 15),   # Chablis, villages
+            "haut":  _g(4,  8, 18, 28),   # Meursault, Puligny, Chablis GC
+        },
     },
+
+    # Champagne — Chardonnay / Pinot Noir / Pinot Meunier
     "Champagne": {
-        "Blanc": {"debut": 3, "apogee_debut": 7, "apogee_fin": 20, "declin": 30},
-        "Rosé": {"debut": 3, "apogee_debut": 5, "apogee_fin": 15, "declin": 20},
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),   # NV grande distribution
+            "moyen": _g(1,  3,  7, 12),   # Maisons moyennes, millésimé entrée
+            "haut":  _g(3,  7, 18, 28),   # Grandes cuvées de prestige
+        },
+        "Rosé": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  3,  6, 10),
+            "haut":  _g(3,  6, 14, 20),
+        },
     },
+
+    # Rhône — Syrah / Grenache / Mourvèdre (N) — Viognier / Marsanne / Roussanne (B)
     "Rhône": {
-        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 30},
-        "Blanc": {"debut": 2, "apogee_debut": 5, "apogee_fin": 12, "declin": 18},
+        "Rouge": {
+            "bas":   _g(1,  3,  6,  9),   # Côtes du Rhône générique
+            "moyen": _g(3,  6, 12, 18),   # Crozes-Hermitage, Gigondas
+            "haut":  _g(5,  9, 20, 30),   # Hermitage, Côte-Rôtie, CdP
+        },
+        "Blanc": {
+            "bas":   _g(1,  2,  4,  7),
+            "moyen": _g(2,  4,  8, 12),
+            "haut":  _g(3,  6, 15, 22),   # Hermitage blanc, Condrieu
+        },
     },
+
+    # Loire — Chenin / Cab.Franc / Muscadet / Sauvignon
     "Loire": {
-        "Blanc": {"debut": 3, "apogee_debut": 7, "apogee_fin": 20, "declin": 30},
-        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 20},
-        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 5, "declin": 8},
+        "Blanc": {
+            "bas":   _g(1,  2,  4,  6),   # Muscadet, Sauvignon entrée
+            "moyen": _g(2,  4,  8, 14),   # Sancerre, Pouilly-Fumé
+            "haut":  _g(4,  8, 20, 35),   # Vouvray sec/moelleux, Savennières
+        },
+        "Rouge": {
+            "bas":   _g(1,  2,  5,  8),   # Anjou rouge, Touraine
+            "moyen": _g(2,  5, 10, 15),   # Bourgueil, Chinon
+            "haut":  _g(4,  8, 18, 25),   # Saumur-Champigny haut de gamme
+        },
+        "Rosé": {
+            "bas":   _g(0,  1,  2,  4),
+            "moyen": _g(0,  1,  3,  5),
+            "haut":  _g(1,  2,  4,  6),
+        },
+        "Liquoreux": {
+            "bas":   _g(2,  5, 15, 25),
+            "moyen": _g(3,  8, 20, 35),
+            "haut":  _g(5, 12, 30, 50),   # Quarts de Chaume, Bonnezeaux
+        },
     },
+
+    # Alsace — Riesling / Gewurztraminer / Pinot Gris
     "Alsace": {
-        "Blanc": {"debut": 3, "apogee_debut": 7, "apogee_fin": 20, "declin": 30},
-        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 5, "declin": 8},
+        "Blanc": {
+            "bas":   _g(1,  2,  5,  8),   # Edelzwicker, Pinot blanc
+            "moyen": _g(3,  6, 12, 18),   # Riesling, Gewurz village
+            "haut":  _g(5, 10, 22, 35),   # Grand Cru, Vendanges tardives
+        },
+        "Rosé": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  2,  4,  6),
+            "haut":  _g(1,  2,  5,  8),
+        },
     },
+
+    # Languedoc-Roussillon — Syrah / Grenache / Carignan / Mourvèdre
     "Languedoc-Roussillon": {
-        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 22},
-        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
-        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 4, "declin": 6},
+        "Rouge": {
+            "bas":   _g(1,  2,  4,  7),   # IGP Pays d'Oc, vins de table
+            "moyen": _g(2,  4,  8, 13),   # Faugères, Saint-Chinian, Corbières
+            "haut":  _g(3,  6, 15, 22),   # Pic Saint-Loup, La Clape, Banyuls
+        },
+        "Blanc": {
+            "bas":   _g(1,  2,  4,  6),
+            "moyen": _g(2,  3,  7, 11),
+            "haut":  _g(2,  4,  9, 14),
+        },
+        "Rosé": {
+            "bas":   _g(0,  1,  2,  4),
+            "moyen": _g(0,  1,  3,  5),
+            "haut":  _g(1,  2,  4,  6),
+        },
     },
+
+    # Provence — Grenache / Cinsault / Mourvèdre
     "Provence": {
-        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 5, "declin": 8},
-        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 20},
-        "Blanc": {"debut": 2, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
+        "Rosé": {
+            "bas":   _g(0,  1,  2,  3),   # À boire dans l'année
+            "moyen": _g(0,  1,  3,  5),
+            "haut":  _g(1,  2,  5,  8),   # Bandol rosé
+        },
+        "Rouge": {
+            "bas":   _g(1,  3,  6,  9),
+            "moyen": _g(2,  5, 10, 16),
+            "haut":  _g(4,  8, 18, 28),   # Bandol rouge (Mourvèdre)
+        },
+        "Blanc": {
+            "bas":   _g(1,  2,  4,  6),
+            "moyen": _g(1,  3,  6,  9),
+            "haut":  _g(2,  4,  8, 12),
+        },
     },
+
+    # Sud-Ouest — Malbec / Tannat / Négrette / Manseng
     "Sud-Ouest": {
-        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
-        "Blanc": {"debut": 2, "apogee_debut": 5, "apogee_fin": 12, "declin": 18},
-        "Mousseux": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
+        "Rouge": {
+            "bas":   _g(1,  3,  6, 10),   # Cahors entrée, Fronton
+            "moyen": _g(3,  6, 14, 20),   # Cahors, Madiran modeste
+            "haut":  _g(5, 10, 22, 30),   # Madiran, Cahors grands vins
+        },
+        "Blanc": {
+            "bas":   _g(1,  2,  4,  7),
+            "moyen": _g(2,  4,  8, 13),
+            "haut":  _g(3,  6, 15, 22),   # Jurançon sec/moelleux
+        },
+        "Mousseux": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  2,  5,  8),
+            "haut":  _g(2,  4,  8, 12),
+        },
     },
+
+    # Jura — Chardonnay / Savagnin / Pinot Noir / Trousseau
     "Jura": {
-        "Blanc": {"debut": 4, "apogee_debut": 8, "apogee_fin": 25, "declin": 40},
-        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 22},
+        "Blanc": {
+            "bas":   _g(2,  4,  8, 12),
+            "moyen": _g(4,  7, 15, 25),
+            "haut":  _g(6, 12, 30, 50),   # Vin jaune, Château-Chalon
+        },
+        "Rouge": {
+            "bas":   _g(2,  4,  8, 12),
+            "moyen": _g(3,  6, 13, 20),
+            "haut":  _g(4,  8, 18, 28),
+        },
     },
+
+    # Savoie — Jacquère / Altesse / Mondeuse
     "Savoie": {
-        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
-        "Rouge": {"debut": 2, "apogee_debut": 5, "apogee_fin": 12, "declin": 18},
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),   # À boire jeune
+            "moyen": _g(1,  3,  7, 11),
+            "haut":  _g(2,  4,  9, 14),   # Roussette de Savoie
+        },
+        "Rouge": {
+            "bas":   _g(1,  2,  5,  8),
+            "moyen": _g(2,  4,  9, 14),
+            "haut":  _g(3,  6, 14, 20),   # Mondeuse vieilles vignes
+        },
     },
+
+    # Corse — Nielluccio / Sciacarello / Vermentino
     "Corse": {
-        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 20},
-        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
-        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 5, "declin": 7},
+        "Rouge": {
+            "bas":   _g(1,  3,  6, 10),
+            "moyen": _g(2,  5, 11, 17),
+            "haut":  _g(4,  7, 16, 24),   # Patrimonio, Ajaccio
+        },
+        "Blanc": {
+            "bas":   _g(1,  2,  4,  7),
+            "moyen": _g(1,  3,  7, 11),
+            "haut":  _g(2,  4,  9, 14),
+        },
+        "Rosé": {
+            "bas":   _g(0,  1,  2,  4),
+            "moyen": _g(0,  1,  3,  5),
+            "haut":  _g(1,  2,  5,  8),
+        },
     },
-    # ── Espagne ──────────────────────────────────────────────
+
+    # ═══════════════════════════════════════════════════════
+    # ESPAGNE
+    # ═══════════════════════════════════════════════════════
+
+    # Rioja — Tempranillo / Garnacha
     "Rioja": {
-        "Rouge": {"debut": 5, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
-        "Blanc": {"debut": 2, "apogee_debut": 5, "apogee_fin": 12, "declin": 18},
+        "Rouge": {
+            "bas":   _g(0,  2,  5,  8),   # Joven, Crianza entrée
+            "moyen": _g(2,  5, 12, 18),   # Crianza, Reserva
+            "haut":  _g(5,  9, 22, 32),   # Gran Reserva, vieilles vignes
+        },
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  3,  7, 11),
+            "haut":  _g(3,  6, 15, 22),   # Rioja blanc élevé en fût
+        },
     },
+
+    # Ribera del Duero — Tempranillo (Tinto Fino)
     "Ribera del Duero": {
-        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 22, "declin": 30},
+        "Rouge": {
+            "bas":   _g(1,  3,  7, 11),
+            "moyen": _g(3,  6, 14, 20),
+            "haut":  _g(5, 10, 24, 35),   # Vega Sicilia, Pingus niveau
+        },
     },
+
+    # Toro — Tinta de Toro (Tempranillo)
     "Toro": {
-        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 18, "declin": 25},
+        "Rouge": {
+            "bas":   _g(1,  3,  7, 11),
+            "moyen": _g(3,  6, 13, 19),
+            "haut":  _g(5,  9, 20, 28),
+        },
     },
+
+    # Priorat — Garnacha / Cariñena
     "Priorat": {
-        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 25, "declin": 35},
+        "Rouge": {
+            "bas":   _g(2,  4,  9, 14),
+            "moyen": _g(4,  7, 16, 24),
+            "haut":  _g(6, 11, 25, 38),
+        },
     },
-    # ── Italie ───────────────────────────────────────────────
+
+    # ═══════════════════════════════════════════════════════
+    # ITALIE
+    # ═══════════════════════════════════════════════════════
+
+    # Toscane — Sangiovese / Cabernet (Super Toscans)
     "Toscane": {
-        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 25, "declin": 35},
-        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
+        "Rouge": {
+            "bas":   _g(1,  3,  7, 11),   # Chianti classique, Morellino
+            "moyen": _g(3,  6, 14, 22),   # Chianti Classico DOCG, Rosso
+            "haut":  _g(5, 10, 25, 38),   # Brunello, Bolgheri, Supertoscans
+        },
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  3,  6, 10),
+            "haut":  _g(2,  4,  9, 14),
+        },
     },
+
+    # Piémont — Nebbiolo / Barbera / Dolcetto / Moscato
     "Piémont": {
-        "Rouge": {"debut": 6, "apogee_debut": 12, "apogee_fin": 30, "declin": 40},
-        "Mousseux": {"debut": 1, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
+        "Rouge": {
+            "bas":   _g(1,  3,  7, 11),   # Barbera, Dolcetto
+            "moyen": _g(4,  8, 16, 25),   # Langhe Nebbiolo, Barolo entrée
+            "haut":  _g(7, 14, 30, 45),   # Barolo DOCG, Barbaresco top
+        },
+        "Mousseux": {
+            "bas":   _g(0,  1,  2,  4),   # Asti, Moscato d'Asti
+            "moyen": _g(0,  1,  3,  5),
+            "haut":  _g(1,  3,  7, 12),
+        },
     },
+
+    # Vénétie — Corvina / Garganega / Glera
     "Vénétie": {
-        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
-        "Blanc": {"debut": 1, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
-        "Mousseux": {"debut": 1, "apogee_debut": 2, "apogee_fin": 6, "declin": 10},
+        "Rouge": {
+            "bas":   _g(0,  2,  5,  8),   # Valpolicella classique
+            "moyen": _g(2,  5, 12, 18),   # Ripasso, Amarone entrée
+            "haut":  _g(5, 10, 22, 32),   # Amarone DOCG
+        },
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),   # Soave, Pinot grigio
+            "moyen": _g(1,  3,  6, 10),
+            "haut":  _g(2,  4,  9, 14),
+        },
+        "Mousseux": {
+            "bas":   _g(0,  0,  2,  3),   # Prosecco à boire dès l'achat
+            "moyen": _g(0,  1,  3,  5),
+            "haut":  _g(1,  2,  5,  8),
+        },
     },
-    # ── Nouveau Monde ─────────────────────────────────────────
+
+    # ═══════════════════════════════════════════════════════
+    # NOUVEAU MONDE
+    # ═══════════════════════════════════════════════════════
+
+    # Napa Valley — Cabernet Sauvignon / Chardonnay
     "Napa Valley": {
-        "Rouge": {"debut": 5, "apogee_debut": 10, "apogee_fin": 20, "declin": 30},
-        "Blanc": {"debut": 2, "apogee_debut": 5, "apogee_fin": 10, "declin": 15},
+        "Rouge": {
+            "bas":   _g(2,  5,  9, 14),
+            "moyen": _g(4,  8, 16, 24),
+            "haut":  _g(6, 12, 25, 38),   # Cult wines, top Cabernets
+        },
+        "Blanc": {
+            "bas":   _g(1,  2,  5,  8),
+            "moyen": _g(2,  4,  8, 12),
+            "haut":  _g(3,  6, 12, 18),
+        },
     },
+
+    # Mendoza — Malbec
     "Mendoza": {
-        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 18, "declin": 25},
-        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 8, "declin": 12},
+        "Rouge": {
+            "bas":   _g(1,  2,  5,  8),   # Malbec classique
+            "moyen": _g(2,  5, 10, 15),   # Malbec de terroir
+            "haut":  _g(4,  8, 18, 26),   # Single vineyard, Lujan de Cuyo
+        },
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  2,  5,  8),
+            "haut":  _g(2,  4,  8, 12),
+        },
     },
+
+    # Barossa Valley — Shiraz / Grenache / Cabernet
     "Barossa Valley": {
-        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
-        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 14},
+        "Rouge": {
+            "bas":   _g(1,  3,  7, 11),
+            "moyen": _g(3,  6, 13, 20),
+            "haut":  _g(5, 10, 22, 32),   # Old vine Shiraz
+        },
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  2,  5,  8),
+            "haut":  _g(2,  4,  8, 12),
+        },
     },
+
+    # Marlborough — Sauvignon Blanc / Pinot Noir
     "Marlborough": {
-        "Blanc": {"debut": 1, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
-        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 4, "declin": 6},
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),   # À boire jeune
+            "moyen": _g(0,  1,  4,  7),
+            "haut":  _g(1,  3,  7, 11),
+        },
+        "Rouge": {
+            "bas":   _g(1,  2,  5,  8),
+            "moyen": _g(2,  4,  9, 14),
+            "haut":  _g(3,  6, 13, 20),
+        },
+        "Rosé": {
+            "bas":   _g(0,  1,  2,  3),
+            "moyen": _g(0,  1,  3,  5),
+            "haut":  _g(1,  2,  4,  6),
+        },
     },
-    # ── Autres ───────────────────────────────────────────────
+
+    # ═══════════════════════════════════════════════════════
+    # AUTRES
+    # ═══════════════════════════════════════════════════════
+
+    # Portugal — Touriga Nacional / Tinta Roriz / Alvarinho / Port
     "Portugal": {
-        "Rouge": {"debut": 4, "apogee_debut": 8, "apogee_fin": 20, "declin": 28},
-        "Blanc": {"debut": 1, "apogee_debut": 3, "apogee_fin": 8, "declin": 12},
-        "Mousseux": {"debut": 2, "apogee_debut": 5, "apogee_fin": 15, "declin": 25},
+        "Rouge": {
+            "bas":   _g(1,  3,  7, 11),
+            "moyen": _g(3,  6, 14, 20),
+            "haut":  _g(5, 10, 24, 35),   # Douro, Alentejo haut
+        },
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),   # Vinho Verde
+            "moyen": _g(1,  3,  6, 10),
+            "haut":  _g(2,  5, 11, 18),
+        },
+        "Mousseux": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  3,  7, 12),
+            "haut":  _g(3,  6, 15, 25),
+        },
     },
+
+    # Allemagne — Riesling principalement
     "Allemagne": {
-        "Blanc": {"debut": 3, "apogee_debut": 8, "apogee_fin": 25, "declin": 40},
-        "Mousseux": {"debut": 2, "apogee_debut": 5, "apogee_fin": 15, "declin": 25},
+        "Blanc": {
+            "bas":   _g(1,  3,  6, 10),   # Qualitätswein, Kabinett
+            "moyen": _g(3,  7, 15, 25),   # Spätlese, Auslese
+            "haut":  _g(5, 12, 30, 50),   # TBA, Eiswein, Beerenauslese
+        },
+        "Mousseux": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  2,  5,  8),
+            "haut":  _g(2,  4,  9, 14),
+        },
     },
+
+    # Default
     "Default": {
-        "Rouge": {"debut": 3, "apogee_debut": 6, "apogee_fin": 15, "declin": 20},
-        "Blanc": {"debut": 2, "apogee_debut": 4, "apogee_fin": 10, "declin": 15},
-        "Rosé": {"debut": 1, "apogee_debut": 2, "apogee_fin": 4, "declin": 6},
-        "Mousseux": {"debut": 1, "apogee_debut": 3, "apogee_fin": 10, "declin": 15},
-        "Liquoreux": {"debut": 5, "apogee_debut": 10, "apogee_fin": 30, "declin": 50},
+        "Rouge": {
+            "bas":   _g(1,  2,  5,  8),
+            "moyen": _g(2,  4,  9, 14),
+            "haut":  _g(4,  7, 16, 24),
+        },
+        "Blanc": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  3,  6, 10),
+            "haut":  _g(3,  6, 13, 20),
+        },
+        "Rosé": {
+            "bas":   _g(0,  1,  2,  4),
+            "moyen": _g(0,  1,  3,  5),
+            "haut":  _g(1,  2,  4,  6),
+        },
+        "Mousseux": {
+            "bas":   _g(0,  1,  3,  5),
+            "moyen": _g(1,  3,  7, 12),
+            "haut":  _g(3,  6, 15, 25),
+        },
+        "Liquoreux": {
+            "bas":   _g(2,  5, 12, 20),
+            "moyen": _g(4,  8, 20, 35),
+            "haut":  _g(6, 12, 35, 60),
+        },
     }
 }
+
+def _gamme(prix):
+    """Détermine la gamme à partir du prix de référence."""
+    if prix is None: return "moyen"
+    if prix < 10:    return "bas"
+    if prix <= 20:   return "moyen"
+    return "haut"
 
 # Cotes des grands millésimes par région
 MILLESIMES_NOTES = {
@@ -309,7 +634,7 @@ def interpoler_note(region_notes, millesime):
     return 88, True
 
 
-def get_maturite_info(region, type_vin, millesime):
+def get_maturite_info(region, type_vin, millesime, prix=None):
     age = datetime.now().year - millesime
 
     # Vin de l'année en cours ou futur
@@ -327,9 +652,15 @@ def get_maturite_info(region, type_vin, millesime):
             "apogee_fin": millesime + 15,
         }
 
-    # Trouver les données de maturité
+    gamme = _gamme(prix)
+
+    # Trouver les données de maturité selon région > type > gamme
     region_data = MATURITE_DATA.get(region, MATURITE_DATA["Default"])
-    maturite = region_data.get(type_vin, MATURITE_DATA["Default"].get(type_vin, MATURITE_DATA["Default"]["Rouge"]))
+    type_data = region_data.get(type_vin, MATURITE_DATA["Default"].get(type_vin, MATURITE_DATA["Default"]["Rouge"]))
+    if "debut" in type_data:
+        maturite = type_data  # ancienne structure sans niveaux
+    else:
+        maturite = type_data.get(gamme, type_data.get("moyen", list(type_data.values())[0]))
 
     # Note du millésime — exacte ou interpolée
     region_notes = MILLESIMES_NOTES.get(region, MILLESIMES_NOTES["Default"])
@@ -380,6 +711,7 @@ def get_maturite_info(region, type_vin, millesime):
         "note_estimee": note_estimee,
         "apogee_debut": millesime + maturite["apogee_debut"],
         "apogee_fin": millesime + maturite["apogee_fin"],
+        "gamme": gamme,
     }
 
 # Profil prix par région : (base €, plafond €, bonification_age_max %)
@@ -525,10 +857,12 @@ def get_vins():
     for v in vins:
         vin = dict(v)
         if vin['millesime']:
+            prix_pour_gamme = vin.get('prix_ref') or vin.get('prix_achat')
             vin['maturite'] = get_maturite_info(
                 vin.get('region', 'Default'),
                 vin.get('type_vin', 'Rouge'),
-                vin['millesime']
+                vin['millesime'],
+                prix=prix_pour_gamme
             )
             # Prix de marché estimé (prix_achat utilisé comme référence si dispo)
             # prix_ref saisi > prix_achat > formule
@@ -598,7 +932,8 @@ def recherche_vin():
     
     maturite_info = None
     if millesime:
-        maturite_info = get_maturite_info(region, data.get('type_vin', 'Rouge'), int(millesime))
+        prix_form = data.get('prix_ref') or data.get('prix_achat')
+        maturite_info = get_maturite_info(region, data.get('type_vin', 'Rouge'), int(millesime), prix=prix_form)
     
     return jsonify({
         "prix": prix_info,
