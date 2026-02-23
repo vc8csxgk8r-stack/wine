@@ -770,15 +770,16 @@ def estimer_prix_local(region, millesime, prix_ref=None):
         bonif_age = min(age * 0.04, profil["age_max"])
         prix = prix_ref * (1 + bonif_age)
     else:
-        # Multiplicateur qualité millésime (logarithmique pour éviter les envolées)
-        if note >= 98:   q = 6.0
-        elif note >= 96: q = 4.0
-        elif note >= 94: q = 2.5
-        elif note >= 92: q = 1.8
-        elif note >= 90: q = 1.4
-        elif note >= 88: q = 1.1
-        elif note >= 85: q = 0.95
-        else:            q = 0.85
+        # Sans prix de référence : multiplicateurs conservateurs
+        # pour éviter de surestimer les vins courants d'un bon millésime
+        if note >= 98:   q = 2.0
+        elif note >= 96: q = 1.7
+        elif note >= 94: q = 1.4
+        elif note >= 92: q = 1.2
+        elif note >= 90: q = 1.05
+        elif note >= 88: q = 0.95
+        elif note >= 85: q = 0.85
+        else:            q = 0.75
 
         # Bonification âge plafonnée selon le potentiel de la région
         bonif_age = min(age * 0.04, profil["age_max"])
@@ -928,11 +929,11 @@ def recherche_vin():
     millesime = data.get('millesime')
     region = data.get('region', 'Default')
     
-    prix_info = search_wine_price(region=region, millesime=millesime)
-    
+    prix_form = data.get('prix_ref') or data.get('prix_achat')
+    prix_info = search_wine_price(region=region, millesime=millesime, prix_ref=prix_form)
+
     maturite_info = None
     if millesime:
-        prix_form = data.get('prix_ref') or data.get('prix_achat')
         maturite_info = get_maturite_info(region, data.get('type_vin', 'Rouge'), int(millesime), prix=prix_form)
     
     return jsonify({
